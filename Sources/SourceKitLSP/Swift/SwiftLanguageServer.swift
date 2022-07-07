@@ -365,6 +365,7 @@ extension SwiftLanguageServer {
         resolveProvider: false,
         triggerCharacters: [".", "("]),
       definitionProvider: nil,
+      typeDefinitionProvider: nil,
       implementationProvider: .bool(true),
       referencesProvider: nil,
       documentHighlightProvider: true,

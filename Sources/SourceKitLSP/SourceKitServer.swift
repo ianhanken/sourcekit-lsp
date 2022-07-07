@@ -179,6 +179,7 @@ public final class SourceKitServer: LanguageServer {
                                          CompletionList(isIncomplete: false, items: []))
     registerToolchainTextDocumentRequest(SourceKitServer.hover, nil)
     registerToolchainTextDocumentRequest(SourceKitServer.definition, .locations([]))
+    registerToolchainTextDocumentRequest(SourceKitServer.typeDefinition, .locations([]))
     registerToolchainTextDocumentRequest(SourceKitServer.references, [])
     registerToolchainTextDocumentRequest(SourceKitServer.implementation, .locations([]))
     registerToolchainTextDocumentRequest(SourceKitServer.prepareCallHierarchy, [])
@@ -639,6 +640,7 @@ extension SourceKitServer {
       hoverProvider: true,
       completionProvider: completionOptions,
       definitionProvider: true,
+      typeDefinitionProvider: .bool(true),
       implementationProvider: .bool(true),
       referencesProvider: true,
       documentHighlightProvider: true,
@@ -1275,6 +1277,14 @@ extension SourceKitServer {
     let request = Request(symbolInfo, id: req.id, clientID: ObjectIdentifier(self),
                           cancellation: req.cancellationToken, reply: callback)
     languageService.symbolInfo(request)
+  }
+
+  func typeDefinition(
+    _ req: Request<TypeDefinitionRequest>,
+    workspace: Workspace,
+    languageService: ToolchainLanguageServer
+  ) {
+    req.reply(nil)
   }
 
   func implementation(

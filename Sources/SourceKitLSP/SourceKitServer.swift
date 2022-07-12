@@ -1284,7 +1284,9 @@ extension SourceKitServer {
     workspace: Workspace,
     languageService: ToolchainLanguageServer
   ) {
-    req.reply(nil)
+    let handled = languageService.typeDefinition(req)
+    guard !handled else { return }
+    req.reply(.locations([]))
   }
 
   func implementation(

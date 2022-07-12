@@ -437,6 +437,12 @@ extension ClangLanguageServerShim {
     return true
   }
 
+  /// Returns true if the `ToolchainLanguageServer` will take ownership of the request.
+  public func typeDefinition(_ req: Request<TypeDefinitionRequest>) -> Bool {
+    forwardRequestToClangdOnQueue(req)
+    return true
+  }
+
   func completion(_ req: Request<CompletionRequest>) {
     forwardRequestToClangdOnQueue(req)
   }

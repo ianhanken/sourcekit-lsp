@@ -85,6 +85,9 @@ public protocol ToolchainLanguageServer: AnyObject {
   /// Returns true if the `ToolchainLanguageServer` will take ownership of the request.
   func definition(_ request: Request<DefinitionRequest>) -> Bool
 
+  /// Returns true if the `ToolchainLanguageServer` will take ownership of the request.
+  func typeDefinition(_ request: Request<TypeDefinitionRequest>) -> Bool
+
   func documentSymbolHighlight(_ req: Request<DocumentHighlightRequest>)
   func foldingRange(_ req: Request<FoldingRangeRequest>)
   func documentSymbol(_ req: Request<DocumentSymbolRequest>)

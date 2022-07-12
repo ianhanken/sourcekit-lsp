@@ -588,6 +588,12 @@ extension SwiftLanguageServer {
     return false
   }
 
+  /// Returns true if the `ToolchainLanguageServer` will take ownership of the request.
+  public func typeDefinition(_ request: Request<TypeDefinitionRequest>) -> Bool {
+    // We don't handle it.
+    return false
+  }
+
   public func completion(_ req: Request<CompletionRequest>) {
     queue.async {
       self._completion(req)

@@ -66,6 +66,12 @@ public struct SymbolDetails: ResponseType, Hashable {
   /// The USR of the symbol, if any.
   public var usr: String?
 
+  /// The type USR of the symbol, if any.
+  public var typeUSR: String?
+
+  /// The container type USR of the symbol, if any.
+  public var containerTypeUSR: String?
+
   /// An opaque identifier in a format known only to clangd.
   // public var id: String?
 
@@ -82,11 +88,15 @@ public struct SymbolDetails: ResponseType, Hashable {
     name: String?,
     containerName: String? = nil,
     usr: String?,
+    typeUSR: String?,
+    containerTypeUSR: String?,
     bestLocalDeclaration: Location? = nil)
   {
     self.name = name
     self.containerName = containerName
     self.usr = usr
+    self.typeUSR = typeUSR
+    self.containerTypeUSR = containerTypeUSR
     self.bestLocalDeclaration = bestLocalDeclaration
   }
 }

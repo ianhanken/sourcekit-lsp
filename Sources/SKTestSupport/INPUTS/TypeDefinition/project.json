@@ -1,0 +1,5 @@
+{
+    "targets": [
+      { "name": "TypeDefinition", "sources": ["TypeDefinition.swift"] }
+    ]
+  }

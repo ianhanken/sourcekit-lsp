@@ -131,6 +131,8 @@ extension SwiftLanguageServer {
           name: dict[keys.name],
           containerName: nil,
           usr: dict[keys.usr],
+          typeUSR: dict[keys.typeusr],
+          containerTypeUSR: dict[keys.containertypeusr],
           bestLocalDeclaration: location),
         annotatedDeclaration: dict[keys.annotated_decl],
         documentationXML: dict[keys.doc_full_as_xml],

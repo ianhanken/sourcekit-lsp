@@ -97,6 +97,31 @@ final class SKTests: XCTestCase {
     ])
   }
 
+  func testIndexTypeDefinition() throws {
+    guard let ws = try staticSourceKitTibsWorkspace(name: "TypeDefinition") else { return }
+    try ws.buildAndIndex()
+    defer { withExtendedLifetime(ws) {} } // Keep workspace alive for callbacks.
+
+    let locDef = ws.testLoc("A:def")
+    let locRef = ws.testLoc("b:var")
+
+    try ws.openDocument(locDef.url, language: .swift)
+
+    // MARK: Jump to definition
+
+    let response = try ws.sk.sendSync(TypeDefinitionRequest(
+      textDocument: locRef.docIdentifier,
+      position: locRef.position))
+    guard case .locations(let jump) = response else {
+      XCTFail("Response is not locations")
+      return
+    }
+
+    XCTAssertEqual(jump.count, 1)
+    XCTAssertEqual(jump.first?.uri, DocumentURI(locDef.url))
+    XCTAssertEqual(jump.first?.range.lowerBound, locDef.position)
+  }
+
   func testIndexShutdown() throws {
 
     let tmpDir = URL(fileURLWithPath: NSTemporaryDirectory(), isDirectory: true)

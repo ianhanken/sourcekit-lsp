@@ -24,6 +24,7 @@ public struct sourcekitd_keys {
   public let categorizededits: sourcekitd_uid_t
   public let column: sourcekitd_uid_t
   public let compilerargs: sourcekitd_uid_t
+  public let containertypeusr: sourcekitd_uid_t
   public let context: sourcekitd_uid_t
   public let description: sourcekitd_uid_t
   public let diagnostic_stage: sourcekitd_uid_t
@@ -66,6 +67,7 @@ public struct sourcekitd_keys {
   public let enablesyntaxmap: sourcekitd_uid_t
   public let text: sourcekitd_uid_t
   public let typename: sourcekitd_uid_t
+  public let typeusr: sourcekitd_uid_t
   public let usr: sourcekitd_uid_t
   public let variable_offset: sourcekitd_uid_t
   public let variable_length: sourcekitd_uid_t
@@ -97,6 +99,7 @@ public struct sourcekitd_keys {
     categorizededits = api.uid_get_from_cstr("key.categorizededits")!
     column = api.uid_get_from_cstr("key.column")!
     compilerargs = api.uid_get_from_cstr("key.compilerargs")!
+    containertypeusr = api.uid_get_from_cstr("key.containertypeusr")!
     context = api.uid_get_from_cstr("key.context")!
     description = api.uid_get_from_cstr("key.description")!
     diagnostic_stage = api.uid_get_from_cstr("key.diagnostic_stage")!
@@ -139,6 +142,7 @@ public struct sourcekitd_keys {
     enablesyntaxmap = api.uid_get_from_cstr("key.enablesyntaxmap")!
     text = api.uid_get_from_cstr("key.text")!
     typename = api.uid_get_from_cstr("key.typename")!
+    typeusr = api.uid_get_from_cstr("key.typeusr")!
     usr = api.uid_get_from_cstr("key.usr")!
     variable_offset = api.uid_get_from_cstr("key.variable_offset")!
     variable_length = api.uid_get_from_cstr("key.variable_length")!

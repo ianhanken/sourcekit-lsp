@@ -1210,6 +1210,7 @@ extension SourceKitServer {
     result: LSPResult<SymbolInfoRequest.Response>,
     index: IndexStoreDB?,
     useLocalFallback: Bool = false,
+    useTypeUSR: Bool = false,
     extractOccurrences: (String, IndexStoreDB) -> [SymbolOccurrence]
   ) -> LSPResult<[(occurrence: SymbolOccurrence?, location: Location)]> {
     guard case .success(let symbols) = result else {
@@ -1220,6 +1221,15 @@ extension SourceKitServer {
       return .success([])
     }
 
+    log("[IAN] usr is \(symbol.usr)")
+    log("[IAN] typeUSR is \(symbol.typeUSR)")
+    log("[IAN] containerTypeUSR is \(symbol.containerTypeUSR)")
+    print("[IAN] usr is \(symbol.usr)")
+    print("[IAN] typeUSR is \(symbol.typeUSR)")
+    print("[IAN] containerTypeUSR is \(symbol.containerTypeUSR)")
+    // log("[IAN] workspace is \(self.workspaceForDocument(uri: req.params.textDocument.uri))")
+    // log("[IAN] index is \(index)")
+
     let fallback: [(occurrence: SymbolOccurrence?, location: Location)]
     if useLocalFallback, let bestLocalDeclaration = symbol.bestLocalDeclaration {
       fallback = [(occurrence: nil, location: bestLocalDeclaration)]
@@ -1227,9 +1237,16 @@ extension SourceKitServer {
       fallback = []
     }
 
-    guard let usr = symbol.usr, let index = index else {
+    print("[IAN] made it to index")
+    log("[IAN] made it to index")
+
+    guard let usr = useTypeUSR ? symbol.typeUSR : symbol.usr, let index = index else {
+      print("index is nil")
       return .success(fallback)
     }
+
+    print("[IAN] made it to extract")
+    log("[IAN] made it to extract")
 
     let occurs = extractOccurrences(usr, index)
     let resolved = occurs.compactMap { occur in
@@ -1284,9 +1301,92 @@ extension SourceKitServer {
     workspace: Workspace,
     languageService: ToolchainLanguageServer
   ) {
-    let handled = languageService.typeDefinition(req)
-    guard !handled else { return }
-    req.reply(.locations([]))
+    let symbolInfo = SymbolInfoRequest(textDocument: req.params.textDocument, position: req.params.position)
+    let index = self.workspaceForDocument(uri: req.params.textDocument.uri)?.index
+    let callback = callbackOnQueue(self.queue) { (result: LSPResult<SymbolInfoRequest.Response>) in
+      let extractedResult = self.extractIndexedOccurrences(result: result, index: index, useLocalFallback: false, useTypeUSR: true) { (usr, index) in
+        log("performing indexed jump-to-def with usr \(usr)")
+        var occurs = index.occurrences(ofUSR: usr, roles: [.definition])
+        log("[IAN] occurs 1: \(occurs)")
+        print("[IAN] occurs 1: \(occurs)")
+        if occurs.isEmpty {
+          occurs = index.occurrences(ofUSR: usr, roles: [.declaration])
+          log("[IAN] occurs 2: \(occurs)")
+          print("[IAN] occurs 2: \(occurs)")
+        }
+        if occurs.isEmpty {
+          occurs = index.occurrences(ofUSR: usr, roles: [.reference])
+          log("[IAN] occurs 3: \(occurs)")
+          print("[IAN] occurs 3: \(occurs)")
+        }
+        return occurs
+      }
+
+      // guard let symbols: [SymbolDetails] = result.success ?? nil, let symbol = symbols.first else {
+      //   req.reply(.locations([]))
+      //   return
+      // }
+
+      // log("[IAN] usr is \(symbol.usr)")
+      // log("[IAN] typeUSR is \(symbol.typeUSR)")
+      // log("[IAN] containerTypeUSR is \(symbol.containerTypeUSR)")
+      // log("[IAN] workspace is \(self.workspaceForDocument(uri: req.params.textDocument.uri))")
+      // log("[IAN] index is \(index)")
+
+      // guard let usr = symbol.typeUSR, let index = index else {
+      //   req.reply(.locations([]))
+      //   return
+      // }
+      // log("performing indexed jump-to-def with usr \(usr)")
+
+      // var occurs = index.occurrences(ofUSR: usr, roles: [.definition])
+      // if occurs.isEmpty {
+      //   occurs = index.occurrences(ofUSR: usr, roles: [.declaration])
+      // }
+
+      // log("[IAN] occurs is \(occurs)")
+
+      // let locations = occurs.compactMap { occur -> Location? in
+      //   guard
+      //     !occur.location.path.isEmpty,
+      //     occur.location.line > 0,
+      //     occur.location.utf8Column > 0
+      //   else {
+      //     log("Occurence of USR \(usr) skipped because it wasn't valid: \(occur)")
+      //     return nil
+      //   }
+      //   return Location(
+      //     uri: DocumentURI(URL(fileURLWithPath: occur.location.path)),
+      //     range: Range(Position(
+      //       line: occur.location.line - 1, // 1-based -> 0-based
+      //       // FIXME: we need to convert the utf8/utf16 column, which may require reading the file!
+      //       utf16index: occur.location.utf8Column - 1
+      //       ))
+      //   )
+      // }
+
+      // req.reply(.locations(locations))
+
+      switch extractedResult {
+      case .success(let resolved):
+        let locs = resolved.map(\.location)
+        // If we're unable to handle the definition request using our index, see if the
+        // language service can handle it (e.g. clangd can provide AST based definitions).
+        guard locs.isEmpty else {
+          req.reply(.locations(locs))
+          log("[IAN] locs: \(locs)")
+          return
+        }
+        let handled = languageService.typeDefinition(req)
+        guard !handled else { return }
+        req.reply(.locations([]))
+      case .failure(let error):
+        req.reply(.failure(error))
+      }
+    }
+    let request = Request(symbolInfo, id: req.id, clientID: ObjectIdentifier(self),
+                          cancellation: req.cancellationToken, reply: callback)
+    languageService.symbolInfo(request)
   }
 
   func implementation(
